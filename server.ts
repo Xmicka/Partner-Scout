@@ -9,7 +9,6 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
-import { createServer as createViteServer } from "vite";
 import { Campaign, PartnerLead, DiscoverRequest } from "./src/types.js";
 
 // Load environment variables
@@ -1200,6 +1199,7 @@ async function startServer() {
   if (!process.env.VERCEL) {
     if (!isProd) {
       // Inject Vite Dev Server as middleware to completely avoid port conflicts and ensure single access
+      const { createServer: createViteServer } = await import("vite");
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "spa",

@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrangeHRM — Partner Scout</title>
+<meta name="description" content="Scout, manage, and export OrangeHRM reseller/partner leads across any country.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM — Light & Dark Mode
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Light mode */
+  --bg: #f6f5f1;
+  --bg2: #eceae4;
+  --surface: #ffffff;
+  --surface2: #f8f7f4;
+  --surface3: #f0efe9;
+  --border: #e2dfd7;
+  --border2: #ccc8bb;
+  --text: #1a1917;
+  --text2: #5c5a54;
+  --text3: #9c9990;
+  --orange: #e8650a;
+  --orange-hover: #d45a08;
+  --orange-light: #fdf0e7;
+  --orange-mid: #f5c49a;
+  --green: #1a8a3a;
+  --green-light: #eaf6ec;
+  --green-border: #a8d8b0;
+  --amber: #8a6200;
+  --amber-light: #fef7e6;
+  --amber-border: #efd080;
+  --red: #c42e2e;
+  --red-light: #fdf0f0;
+  --red-border: #f0b0b0;
+  --blue: #1a58a8;
+  --blue-light: #edf4fd;
+  --blue-border: #a0c8f0;
+  --purple: #6840b0;
+  --purple-light: #f2eeff;
+  --purple-border: #c0a8f0;
+  --shadow: rgba(0,0,0,.06);
+  --shadow2: rgba(0,0,0,.12);
+  --r: 8px;
+  --rlg: 12px;
+  --rxl: 16px;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #111110;
+  --bg2: #191918;
+  --surface: #1e1e1c;
+  --surface2: #252523;
+  --surface3: #2c2c29;
+  --border: #333330;
+  --border2: #444440;
+  --text: #e8e6e0;
+  --text2: #a8a69e;
+  --text3: #6e6c66;
+  --orange-light: #2a1f14;
+  --orange-mid: #5a3a18;
+  --green-light: #142218;
+  --green-border: #2a5a34;
+  --amber-light: #222014;
+  --amber-border: #5a4820;
+  --red-light: #221414;
+  --red-border: #5a2828;
+  --blue-light: #141c28;
+  --blue-border: #2a3e5a;
+  --purple-light: #1c142e;
+  --purple-border: #3a2860;
+  --shadow: rgba(0,0,0,.2);
+  --shadow2: rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Topbar ── */
+.topbar {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.t-logo { display: flex; align-items: center; gap: 10px; }
+.t-logomark {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #e8650a, #ff8c40);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(232,101,10,.3);
+}
+.t-logomark svg { width: 16px; height: 16px; fill: #fff; }
+.t-name { font-size: 15px; font-weight: 600; letter-spacing: -.02em; }
+.t-name span { color: var(--text3); font-weight: 400; font-size: 12px; margin-left: 4px; }
+.t-spacer { flex: 1; }
+.t-actions { display: flex; gap: 6px; align-items: center; }
+.t-kbd {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 6px; border-radius: 5px;
+  background: var(--surface2); border: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--text3);
+}
+
+/* ── Status bar ── */
+.statusbar {
+  height: 28px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 16px;
+  font-size: 11px; color: var(--text3);
+}
+.sb-dot { width: 6px; height: 6px; border-radius: 50%; }
+.sb-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.sb-dot.off { background: var(--text3); }
+
+/* ── Layout ── */
+.layout { display: flex; min-height: calc(100vh - 84px); }
+.sidebar {
+  width: 230px; flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 14px 0;
+  position: sticky; top: 84px;
+  height: calc(100vh - 84px);
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+  transition: width .2s;
+}
+.content { flex: 1; padding: 24px; overflow-x: hidden; max-width: 100%; }
+
+/* ── Sidebar ── */
+.s-section { padding: 0 10px 14px; }
+.s-label {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+  padding: 0 8px 7px;
+}
+.s-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: var(--r);
+  color: var(--text2); font-size: 13px;
+  cursor: pointer; border: none; background: none;
+  width: 100%; text-align: left; font-family: inherit;
+  transition: all .15s;
+}
+.s-item:hover { background: var(--surface2); color: var(--text); }
+.s-item.active { background: var(--orange-light); color: var(--orange); font-weight: 500; }
+.s-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.s-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.s-count {
+  margin-left: auto; font-size: 10px;
+  background: var(--surface3); padding: 1px 7px;
+  border-radius: 20px; color: var(--text3);
+  font-weight: 500;
+}
+.s-divider { height: 1px; background: var(--border); margin: 2px 10px 14px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--r);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); font-family: inherit; font-size: 13px;
+  font-weight: 500; cursor: pointer; transition: all .15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface2); border-color: var(--border2); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.btn-primary { background: var(--orange); border-color: var(--orange); color: #fff; }
+.btn-primary:hover { background: var(--orange-hover); border-color: var(--orange-hover); box-shadow: 0 4px 12px rgba(232,101,10,.3); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-ghost:hover { background: var(--surface2); border-color: var(--border); }
+.btn-danger { color: var(--red); border-color: var(--red-border); }
+.btn-danger:hover { background: var(--red-light); }
+.btn-icon {
+  width: 34px; height: 34px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface); cursor: pointer; transition: all .15s;
+  color: var(--text2);
+}
+.btn-icon:hover { background: var(--surface2); color: var(--text); }
+.btn-icon svg { width: 16px; height: 16px; }
+
+/* ── Scout hero ── */
+.scout-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rxl);
+  padding: 32px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.scout-hero::before {
+  content: '';
+  position: absolute; right: -40px; top: -40px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(232,101,10,.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.scout-hero h2 {
+  font-size: 20px; font-weight: 700;
+  margin-bottom: 6px; letter-spacing: -.03em;
+}
+.scout-hero p {
+  font-size: 13px; color: var(--text2);
+  max-width: 580px; line-height: 1.7;
+}
+.scout-inputs {
+  display: flex; gap: 10px; margin-top: 20px;
+  flex-wrap: wrap; align-items: flex-end;
+}
+.scout-field { display: flex; flex-direction: column; gap: 5px; }
+.scout-field label {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.scout-field input, .scout-field select {
+  padding: 9px 14px; border: 1px solid var(--border);
+  border-radius: var(--r); font-family: inherit;
+  font-size: 13px; color: var(--text);
+  background: var(--surface); outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.scout-field input:focus, .scout-field select:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(232,101,10,.1);
+}
+.scout-field input::placeholder { color: var(--text3); }
+.country-input-wrap { position: relative; }
+.country-input { width: 260px; }
+.focus-input { width: 280px; }
+.country-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); max-height: 260px; overflow-y: auto;
+  z-index: 50; display: none;
+  box-shadow: 0 8px 24px var(--shadow2);
+}
+.country-dropdown.open { display: block; }
+.cd-item {
+  padding: 8px 14px; font-size: 13px;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  transition: background .1s;
+}
+.cd-item:hover, .cd-item.highlighted { background: var(--surface2); }
+.cd-item .cd-flag { font-size: 16px; }
+
+/* ── Batch mode ── */
+.batch-area {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px; margin-top: 14px;
+}
+.batch-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.batch-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--orange-light); border: 1px solid var(--orange-mid);
+  border-radius: 20px; padding: 3px 10px 3px 8px;
+  font-size: 12px; color: var(--orange);
+}
+.batch-tag button {
+  background: none; border: none; cursor: pointer;
+  color: var(--orange); font-size: 14px; line-height: 1;
+  padding: 0 2px; opacity: .7;
+}
+.batch-tag button:hover { opacity: 1; }
+
+/* ── Key banner ── */
+.key-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--amber-light);
+  border: 1px solid var(--amber-border);
+  border-radius: var(--r); padding: 10px 16px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.key-banner svg { width: 15px; height: 15px; color: var(--amber); flex-shrink: 0; }
+.key-banner-text { font-size: 12px; color: var(--amber); flex: 1; min-width: 200px; }
+.key-set-banner { background: var(--green-light); border-color: var(--green-border); }
+.key-set-banner svg { color: var(--green); }
+.key-set-banner .key-banner-text { color: var(--green); }
+
+/* ── Results ── */
+.results-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rxl);
+  overflow: hidden; margin-bottom: 20px;
+  display: none;
+  animation: slideUp .3s ease;
+}
+.results-area.visible { display: block; }
+.results-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  display: flex; align-items: center; gap: 10px;
+}
+.results-title { font-size: 14px; font-weight: 600; flex: 1; }
+.results-body { padding: 18px 20px; }
+
+/* ── Paste fallback ── */
+.prompt-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--text2);
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 220px; overflow-y: auto; line-height: 1.7;
+  margin-bottom: 12px;
+}
+.paste-area {
+  width: 100%; min-height: 140px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--text);
+  background: var(--surface); outline: none;
+  resize: vertical; line-height: 1.6;
+}
+.paste-area:focus { border-color: var(--orange); }
+
+/* ── Lead cards ── */
+.leads-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px; margin-top: 6px;
+}
+.lead-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rlg);
+  overflow: hidden;
+  transition: all .18s;
+  cursor: pointer;
+  position: relative;
+}
+.lead-card:hover {
+  border-color: var(--border2);
+  box-shadow: 0 4px 16px var(--shadow);
+  transform: translateY(-2px);
+}
+.lead-card.selected-card {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 2px var(--orange-mid);
+}
+.lc-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
+.lc-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.lc-num {
+  width: 24px; height: 24px; border-radius: 6px;
+  background: var(--surface3); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  flex-shrink: 0;
+}
+.lc-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+.lc-location { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.lc-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.lc-body { padding: 14px 18px; }
+.lc-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.lc-metric { background: var(--surface2); border-radius: var(--r); padding: 8px 10px; }
+.lc-m-label {
+  font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px;
+}
+.lc-m-val { font-size: 13px; font-weight: 500; color: var(--text); }
+.lc-partners { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.lc-ptag {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px; font-size: 10px;
+  padding: 2px 7px; color: var(--text2);
+}
+.lc-note {
+  font-size: 12px; color: var(--text2); line-height: 1.6;
+  border-left: 2px solid var(--orange-mid); padding-left: 10px;
+}
+.lc-footer {
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px; align-items: center;
+}
+.score-wrap { display: flex; align-items: center; gap: 7px; margin-left: auto; }
+.score-bar { width: 48px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.score-fill { height: 100%; border-radius: 2px; transition: width .5s; }
+.fill-high { background: var(--green); }
+.fill-mid { background: #c8900a; }
+.fill-low { background: var(--red); }
+
+/* ── Badge ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 500; white-space: nowrap;
+}
+.b-high { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+.b-mid { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-border); }
+.b-low { background: var(--red-light); color: var(--red); border: 1px solid var(--red-border); }
+.b-new { background: var(--purple-light); color: var(--purple); border: 1px solid var(--purple-border); }
+.b-contacted { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
+.b-progress { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-border); }
+.b-signed { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+.b-passed { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+.b-sme { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
+.b-enterprise { background: var(--purple-light); color: var(--purple); border: 1px solid var(--purple-border); }
+
+/* ── Pipeline toolbar ── */
+.pipeline-toolbar {
+  display: flex; gap: 10px; align-items: center;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 360px; }
+.search-wrap svg {
+  position: absolute; left: 10px; top: 50%;
+  transform: translateY(-50%); width: 14px; height: 14px;
+  color: var(--text3); pointer-events: none;
+}
+.search-input {
+  width: 100%; padding: 8px 12px 8px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--r); font-family: inherit;
+  font-size: 13px; color: var(--text);
+  background: var(--surface); outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.search-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232,101,10,.1); }
+.search-input::placeholder { color: var(--text3); }
+select.fsel {
+  padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: var(--r); background: var(--surface);
+  font-family: inherit; font-size: 13px; color: var(--text);
+  outline: none; cursor: pointer;
+}
+select.fsel:focus { border-color: var(--orange); }
+
+/* ── Pipeline table ── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rxl);
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 10px 16px; text-align: left;
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .06em;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2); white-space: nowrap;
+  cursor: pointer; user-select: none;
+  transition: color .15s;
+}
+thead th:hover { color: var(--text2); }
+thead th.sorted { color: var(--orange); }
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background .12s; cursor: pointer;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+tbody td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+.cell-name { font-weight: 500; }
+.cell-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.ptags { display: flex; flex-wrap: wrap; gap: 3px; }
+
+/* ── Stats row ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px; margin-bottom: 20px;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rlg);
+  padding: 16px 18px;
+  transition: all .18s;
+}
+.stat:hover { transform: translateY(-2px); box-shadow: 0 4px 12px var(--shadow); }
+.stat-lbl {
+  font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px;
+}
+.stat-val { font-size: 24px; font-weight: 700; letter-spacing: -.03em; line-height: 1.2; }
+.stat-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.stat-accent { border-left: 3px solid var(--orange); }
+
+/* ── Detail panel ── */
+.detail-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.3);
+  z-index: 89;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.detail-overlay.open { opacity: 1; pointer-events: auto; }
+.detail-panel {
+  position: fixed; right: 0; top: 0;
+  width: 520px; height: 100vh;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 90; overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.22,.61,.36,1);
+  box-shadow: -8px 0 32px var(--shadow2);
+}
+.detail-panel.open { transform: translateX(0); }
+.dp-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+  background: var(--surface); z-index: 1;
+}
+.dp-close {
+  position: absolute; right: 16px; top: 16px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); padding: 4px; border-radius: var(--r);
+  transition: all .15s;
+}
+.dp-close:hover { background: var(--surface2); color: var(--text); }
+.dp-name { font-size: 18px; font-weight: 700; margin-bottom: 6px; padding-right: 36px; letter-spacing: -.02em; }
+.dp-meta { font-size: 12px; color: var(--text3); display: flex; gap: 10px; flex-wrap: wrap; }
+.dp-body { padding: 20px 24px; }
+.dp-section { margin-bottom: 20px; }
+.dp-section-title {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;
+}
+.dp-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dp-metric { background: var(--surface2); border-radius: var(--r); padding: 10px 12px; }
+.dm-lbl { font-size: 10px; color: var(--text3); margin-bottom: 2px; }
+.dm-val { font-size: 15px; font-weight: 600; }
+.dm-note { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.dp-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.dp-tag {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px; font-size: 11px;
+  padding: 3px 8px; color: var(--text2);
+}
+.pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pc-pros {
+  background: var(--green-light);
+  border: 1px solid var(--green-border);
+  border-radius: var(--r); padding: 10px 12px;
+}
+.pc-cons {
+  background: var(--amber-light);
+  border: 1px solid var(--amber-border);
+  border-radius: var(--r); padding: 10px 12px;
+}
+.pc-title {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+}
+.pc-pros .pc-title { color: var(--green); }
+.pc-cons .pc-title { color: var(--amber); }
+.pc-pros li, .pc-cons li { font-size: 12px; line-height: 1.7; margin-left: 14px; }
+.rec-block {
+  background: var(--surface2);
+  border-left: 3px solid var(--orange);
+  border-radius: 0 var(--r) var(--r) 0;
+  padding: 12px 14px;
+}
+.rec-block p { font-size: 12px; line-height: 1.7; color: var(--text); }
+.status-sel {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r); font-family: inherit;
+  font-size: 13px; color: var(--text);
+  background: var(--surface); outline: none; cursor: pointer;
+}
+.status-sel:focus { border-color: var(--orange); }
+.notes-ta {
+  width: 100%; min-height: 80px;
+  padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: var(--r); font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--text);
+  background: var(--surface); resize: vertical;
+  outline: none; line-height: 1.6;
+}
+.notes-ta:focus { border-color: var(--orange); }
+.dp-actions { display: flex; gap: 8px; padding-bottom: 8px; flex-wrap: wrap; }
+
+/* ── Pitch block ── */
+.pitch-block {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px;
+}
+.pitch-email {
+  font-size: 12px; line-height: 1.8;
+  color: var(--text); white-space: pre-wrap;
+}
+
+/* ── Country view ── */
+.country-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.country-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rlg);
+  padding: 18px; cursor: pointer;
+  transition: all .18s;
+}
+.country-card:hover {
+  border-color: var(--border2);
+  box-shadow: 0 4px 16px var(--shadow);
+  transform: translateY(-2px);
+}
+.cc-hdr { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.cc-flag { font-size: 28px; }
+.cc-name { font-size: 15px; font-weight: 600; }
+.cc-count { font-size: 11px; color: var(--text3); }
+.cc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cc-stat { text-align: center; background: var(--surface2); border-radius: var(--r); padding: 8px 4px; }
+.cc-sv { font-size: 16px; font-weight: 700; }
+.cc-sl { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
+
+/* ── Analytics view ── */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 16px;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rxl);
+  padding: 20px;
+}
+.chart-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+.funnel-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.funnel-label { font-size: 12px; color: var(--text2); width: 100px; text-align: right; }
+.funnel-bar-wrap { flex: 1; height: 28px; background: var(--surface2); border-radius: var(--r); overflow: hidden; }
+.funnel-bar {
+  height: 100%; border-radius: var(--r);
+  display: flex; align-items: center;
+  padding: 0 10px; font-size: 11px;
+  font-weight: 600; color: #fff;
+  transition: width .5s;
+  min-width: fit-content;
+}
+.bar-chart-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 6px;
+}
+.bar-label { font-size: 12px; color: var(--text2); width: 120px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-wrap { flex: 1; height: 22px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width .5s; }
+.bar-val { font-size: 12px; font-weight: 600; color: var(--text); width: 30px; }
+
+/* ── Spinner ── */
+.spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  vertical-align: -2px; margin-right: 5px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Empty ── */
+.empty { text-align: center; padding: 60px 20px; color: var(--text3); animation: fadeIn .3s; }
+.empty svg { width: 40px; height: 40px; margin-bottom: 12px; color: var(--border2); }
+.empty h3 { font-size: 15px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
+.empty p { font-size: 13px; }
+
+/* ── Modal ── */
+.modal-bd {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 200; display: none;
+  align-items: center; justify-content: center;
+  animation: fadeIn .15s;
+}
+.modal-bd.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--rxl);
+  width: 520px; max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px var(--shadow2);
+  animation: slideUp .2s;
+}
+.modal-hdr {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-x {
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); font-size: 18px; line-height: 1;
+  padding: 4px 8px; border-radius: var(--r);
+}
+.modal-x:hover { background: var(--surface2); color: var(--text); }
+.modal-body { padding: 20px 24px; }
+.modal-footer {
+  padding: 14px 24px 20px;
+  display: flex; gap: 8px; justify-content: flex-end;
+  border-top: 1px solid var(--border);
+}
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg label {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.fg input, .fg select, .fg textarea {
+  padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: var(--r); font-family: inherit;
+  font-size: 13px; color: var(--text);
+  background: var(--surface); outline: none;
+}
+.fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--orange); }
+.fg textarea { min-height: 64px; resize: vertical; line-height: 1.5; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--text); color: var(--bg);
+  padding: 10px 18px; border-radius: var(--r);
+  font-size: 13px; font-weight: 500; z-index: 300;
+  opacity: 0; transition: all .25s; pointer-events: none;
+  box-shadow: 0 4px 16px var(--shadow2);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Batch progress ── */
+.batch-progress {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px; margin-top: 14px;
+}
+.bp-bar-wrap {
+  width: 100%; height: 6px;
+  background: var(--border);
+  border-radius: 3px; overflow: hidden;
+  margin: 8px 0;
+}
+.bp-bar {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--orange), #ff8c40);
+  transition: width .3s;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── Print ── */
+@media print {
+  .topbar, .sidebar, .statusbar, .pipeline-toolbar, .detail-panel,
+  .detail-overlay, .toast, .results-area, .modal-bd { display: none !important; }
+  .content { padding: 0; }
+  .layout { display: block; }
+}
+</style>
+</head>
+<body>
+<div style="display:flex;flex-direction:column;min-height:100vh">
+
+<!-- TOPBAR -->
+<header class="topbar" id="topbar">
+  <div class="t-logo">
+    <div class="t-logomark"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></div>
+    <span class="t-name">OrangeHRM <span>Partner Scout</span></span>
+  </div>
+  <div class="t-spacer"></div>
+  <div class="t-actions">
+    <span class="t-kbd" title="Ctrl+K to scout">Ctrl+K</span>
+    <button class="btn btn-sm" onclick="exportCSV()" id="btn-csv-export">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>CSV
+    </button>
+    <button class="btn btn-sm" onclick="exportPDF()" id="btn-pdf-export">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>PDF
+    </button>
+    <button class="btn btn-sm" onclick="exportDOCX()" id="btn-docx-export">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>DOCX
+    </button>
+    <button class="btn-icon" onclick="toggleTheme()" id="btn-theme" title="Toggle dark/light mode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="theme-icon"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <span class="sb-dot" id="sb-api-dot"></span>
+  <span id="sb-api-text">No API key</span>
+  <span style="opacity:.3">|</span>
+  <span id="sb-leads-text">0 leads</span>
+  <span style="opacity:.3">|</span>
+  <span id="sb-last-scout">No scouts yet</span>
+</div>
+
+<div class="layout">
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="s-section">
+    <div class="s-label">Scout</div>
+    <button class="s-item active" id="nav-scout" onclick="setView('scout')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Find partners
+    </button>
+    <button class="s-item" id="nav-countries" onclick="setView('countries')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      By country
+    </button>
+  </div>
+  <div class="s-divider"></div>
+  <div class="s-section">
+    <div class="s-label">Pipeline</div>
+    <button class="s-item" id="nav-pipeline" onclick="setView('pipeline')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      All leads
+      <span class="s-count" id="cnt-total">0</span>
+    </button>
+  </div>
+  <div class="s-divider"></div>
+  <div class="s-section">
+    <div class="s-label">By status</div>
+    <button class="s-item" onclick="filterStatus('new')">
+      <span class="s-dot" style="background:#6840b0"></span>New
+      <span class="s-count" id="cnt-new">0</span>
+    </button>
+    <button class="s-item" onclick="filterStatus('contacted')">
+      <span class="s-dot" style="background:var(--blue)"></span>Contacted
+      <span class="s-count" id="cnt-contacted">0</span>
+    </button>
+    <button class="s-item" onclick="filterStatus('in_progress')">
+      <span class="s-dot" style="background:var(--amber)"></span>In progress
+      <span class="s-count" id="cnt-progress">0</span>
+    </button>
+    <button class="s-item" onclick="filterStatus('signed')">
+      <span class="s-dot" style="background:var(--green)"></span>Signed
+      <span class="s-count" id="cnt-signed">0</span>
+    </button>
+    <button class="s-item" onclick="filterStatus('passed')">
+      <span class="s-dot" style="background:var(--text3)"></span>Passed
+      <span class="s-count" id="cnt-passed">0</span>
+    </button>
+  </div>
+  <div class="s-divider"></div>
+  <div class="s-section">
+    <div class="s-label">Analytics</div>
+    <button class="s-item" id="nav-analytics" onclick="setView('analytics')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Dashboard
+    </button>
+  </div>
+  <div class="s-divider"></div>
+  <div class="s-section" style="margin-top:auto">
+    <div class="s-label">Settings</div>
+    <button class="s-item" onclick="openSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      API & settings
+    </button>
+    <button class="s-item" onclick="document.getElementById('csv-import').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+      Import CSV
+    </button>
+    <input type="file" id="csv-import" accept=".csv" style="display:none" onchange="importCSV(event)">
+    <button class="s-item" onclick="downloadTemplate()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      CSV template
+    </button>
+    <button class="s-item" onclick="clearAll()" style="color:var(--red)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg>
+      Clear all data
+    </button>
+  </div>
+</nav>
+
+<!-- CONTENT -->
+<main class="content">
+
+<!-- ── SCOUT VIEW ── -->
+<div id="view-scout">
+  <div id="key-banner-wrap"></div>
+
+  <div class="scout-hero">
+    <h2>Scout a new market</h2>
+    <p>Enter any country and click Scout. The tool uses Gemini AI to find 10 qualified ERP, IS, and HR software resellers that are strong candidates to become OrangeHRM partners.</p>
+    <div class="scout-inputs">
+      <div class="scout-field">
+        <label>Country</label>
+        <div class="country-input-wrap">
+          <input class="country-input" id="scout-country" type="text" placeholder="e.g. Brazil, Germany, UAE…" autocomplete="off" oninput="filterCountryDropdown()" onfocus="filterCountryDropdown()" onkeydown="handleCountryKey(event)">
+          <div class="country-dropdown" id="country-dropdown"></div>
+        </div>
+      </div>
+      <div class="scout-field">
+        <label>Focus (optional)</label>
+        <input class="focus-input" id="scout-focus" type="text" placeholder="e.g. SAP resellers, HR software vendors" onkeydown="if(event.key==='Enter')doScout()">
+      </div>
+      <button class="btn btn-primary" id="scout-btn" onclick="doScout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Scout country
+      </button>
+    </div>
+
+    <!-- Batch mode -->
+    <div class="batch-area" id="batch-area" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <strong style="font-size:12px">Batch mode</strong>
+        <span style="font-size:11px;color:var(--text3)">Add countries, then scout all at once</span>
+      </div>
+      <div class="batch-tags" id="batch-tags"></div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="addBatchCountry()">+ Add current country</button>
+        <button class="btn btn-sm btn-primary" onclick="doBatchScout()" id="batch-scout-btn">Scout all</button>
+        <button class="btn btn-sm" onclick="clearBatch()">Clear</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="batch-toggle" onchange="toggleBatchMode()"> Batch mode
+      </label>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-area" id="results-area">
+    <div class="results-header">
+      <span class="results-title" id="results-title">Results</span>
+      <button class="btn btn-sm btn-primary" id="save-all-btn" onclick="saveAllLeads()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save all to pipeline
+      </button>
+      <button class="btn btn-sm" id="save-selected-btn" onclick="saveSelectedLeads()" style="display:none">Save selected</button>
+    </div>
+    <div class="results-body" id="results-body"></div>
+  </div>
+
+  <!-- Paste fallback -->
+  <div id="paste-section" style="display:none">
+    <div class="results-area visible">
+      <div class="results-header">
+        <span class="results-title">Step 2 — Paste AI results</span>
+      </div>
+      <div class="results-body">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Copy the prompt above, paste it into <strong>Claude, ChatGPT, or Gemini</strong>, then paste the JSON response below:</p>
+        <textarea class="paste-area" id="paste-input" placeholder='Paste the JSON array here, e.g. [{"company_name":"...","country":"..."}]'></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="parsePaste()">Parse & preview results</button>
+          <button class="btn btn-sm" onclick="document.getElementById('paste-section').style.display='none'">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch progress -->
+  <div class="batch-progress" id="batch-progress" style="display:none">
+    <div style="font-size:13px;font-weight:500" id="bp-label">Scouting...</div>
+    <div class="bp-bar-wrap"><div class="bp-bar" id="bp-bar" style="width:0%"></div></div>
+    <div style="font-size:11px;color:var(--text3)" id="bp-detail"></div>
+  </div>
+</div>
+
+<!-- ── COUNTRIES VIEW ── -->
+<div id="view-countries" style="display:none">
+  <div style="margin-bottom:18px"><h2 style="font-size:18px;font-weight:700;letter-spacing:-.02em">Countries scouted</h2></div>
+  <div class="country-grid" id="country-grid"></div>
+  <div id="country-empty" class="empty" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+    <h3>No countries scouted yet</h3><p>Use the Scout tab to find partners in any country.</p>
+  </div>
+</div>
+
+<!-- ── PIPELINE VIEW ── -->
+<div id="view-pipeline" style="display:none">
+  <div class="stats-row" id="stats-row"></div>
+  <div class="pipeline-toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="search-q" placeholder="Search company, country, partners…" oninput="renderTable()">
+    </div>
+    <select class="fsel" id="flt-country" onchange="renderTable()"><option value="">All countries</option></select>
+    <select class="fsel" id="flt-fit" onchange="renderTable()">
+      <option value="">All fit levels</option>
+      <option value="high">High fit</option>
+      <option value="mid">Mid fit</option>
+      <option value="low">Low fit</option>
+    </select>
+    <select class="fsel" id="flt-status" onchange="renderTable()">
+      <option value="">All statuses</option>
+      <option value="new">New</option>
+      <option value="contacted">Contacted</option>
+      <option value="in_progress">In progress</option>
+      <option value="signed">Signed</option>
+      <option value="passed">Passed</option>
+    </select>
+    <select class="fsel" id="flt-segment" onchange="renderTable()">
+      <option value="">All segments</option>
+      <option value="SME">SME</option>
+      <option value="Mid-Market">Mid-Market</option>
+      <option value="Enterprise">Enterprise</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('company_name')" id="th-company_name">Company</th>
+          <th onclick="sortBy('country')" id="th-country">Country</th>
+          <th onclick="sortBy('employees')" id="th-employees">Size</th>
+          <th onclick="sortBy('revenue_est')" id="th-revenue_est">Revenue est.</th>
+          <th onclick="sortBy('fit_score')" id="th-fit_score">Fit</th>
+          <th>Partners</th>
+          <th onclick="sortBy('outreach_status')" id="th-outreach_status">Status</th>
+        </tr>
+      </thead>
+      <tbody id="pipeline-tbody"></tbody>
+    </table>
+    <div id="pipeline-empty" class="empty" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <h3>No leads in pipeline yet</h3><p>Scout a country to find potential partners.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── ANALYTICS VIEW ── -->
+<div id="view-analytics" style="display:none">
+  <div style="margin-bottom:18px"><h2 style="font-size:18px;font-weight:700;letter-spacing:-.02em">Analytics Dashboard</h2></div>
+  <div class="stats-row" id="analytics-stats"></div>
+  <div class="analytics-grid" id="analytics-grid"></div>
+</div>
+
+</main>
+</div>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detail-panel">
+  <div class="dp-header">
+    <button class="dp-close" onclick="closeDetail()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="dp-name" id="dp-name"></div>
+    <div class="dp-meta" id="dp-meta"></div>
+  </div>
+  <div class="dp-body" id="dp-body"></div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bd" id="settings-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title">API & Settings</span>
+      <button class="modal-x" onclick="closeSettings()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.7">
+        Add a <strong>Gemini API key</strong> (free at <a href="https://aistudio.google.com" target="_blank" style="color:var(--orange)">aistudio.google.com</a>) to enable one-click scouting. Your key is stored only in your browser's local storage.
+        <br><br>
+        <strong>No key?</strong> The tool will generate a prompt you can paste into any free AI.
+      </p>
+      <div class="fg" style="margin-bottom:16px">
+        <label>Gemini API key</label>
+        <input type="password" id="gemini-key-input" placeholder="AIza…" oninput="liveKeyUpdate()" style="font-family:'JetBrains Mono',monospace">
+      </div>
+      <div class="fg" style="margin-bottom:16px">
+        <label>Gemini model</label>
+        <select id="gemini-model-select">
+          <option value="gemini-2.0-flash">gemini-2.0-flash (fast, recommended)</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro (slower, higher quality)</option>
+        </select>
+      </div>
+      <div id="key-status-msg" style="font-size:12px;color:var(--text3)">Key stored locally in browser only.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSettings()">Close</button>
+      <button class="btn btn-primary" onclick="saveKey()">Save settings</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════
+let leads = [];
+let sortCol = 'fit_score', sortDir = -1;
+let activeView = 'scout';
+let pendingLeads = [];
+let selectedLeadIds = new Set();
+let batchCountries = [];
+let lastScoutTime = null;
+let apiCallQueue = Promise.resolve();
+let apiLastCallTime = 0;
+
+// ── Helpers ──
+function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function save() { localStorage.setItem('partnerScoutData', JSON.stringify(leads)); }
+function getKey() { return (document.getElementById('gemini-key-input').value || '').trim() || (localStorage.getItem('psGeminiKey') || ''); }
+function getModel() { return localStorage.getItem('psGeminiModel') || 'gemini-2.0-flash'; }
+
+// ── Country data (195+ countries with flags) ──
+const COUNTRIES = [
+  ["Afghanistan","🇦🇫"],["Albania","🇦🇱"],["Algeria","🇩🇿"],["Andorra","🇦🇩"],["Angola","🇦🇴"],["Argentina","🇦🇷"],["Armenia","🇦🇲"],["Australia","🇦🇺"],["Austria","🇦🇹"],["Azerbaijan","🇦🇿"],
+  ["Bahamas","🇧🇸"],["Bahrain","🇧🇭"],["Bangladesh","🇧🇩"],["Barbados","🇧🇧"],["Belarus","🇧🇾"],["Belgium","🇧🇪"],["Belize","🇧🇿"],["Benin","🇧🇯"],["Bhutan","🇧🇹"],["Bolivia","🇧🇴"],
+  ["Bosnia and Herzegovina","🇧🇦"],["Botswana","🇧🇼"],["Brazil","🇧🇷"],["Brunei","🇧🇳"],["Bulgaria","🇧🇬"],["Burkina Faso","🇧🇫"],["Burundi","🇧🇮"],["Cambodia","🇰🇭"],["Cameroon","🇨🇲"],["Canada","🇨🇦"],
+  ["Cape Verde","🇨🇻"],["Central African Republic","🇨🇫"],["Chad","🇹🇩"],["Chile","🇨🇱"],["China","🇨🇳"],["Colombia","🇨🇴"],["Comoros","🇰🇲"],["Congo","🇨🇬"],["Costa Rica","🇨🇷"],["Croatia","🇭🇷"],
+  ["Cuba","🇨🇺"],["Cyprus","🇨🇾"],["Czech Republic","🇨🇿"],["Denmark","🇩🇰"],["Djibouti","🇩🇯"],["Dominican Republic","🇩🇴"],["DR Congo","🇨🇩"],["Ecuador","🇪🇨"],["Egypt","🇪🇬"],["El Salvador","🇸🇻"],
+  ["Equatorial Guinea","🇬🇶"],["Eritrea","🇪🇷"],["Estonia","🇪🇪"],["Eswatini","🇸🇿"],["Ethiopia","🇪🇹"],["Fiji","🇫🇯"],["Finland","🇫🇮"],["France","🇫🇷"],["Gabon","🇬🇦"],["Gambia","🇬🇲"],
+  ["Georgia","🇬🇪"],["Germany","🇩🇪"],["Ghana","🇬🇭"],["Greece","🇬🇷"],["Grenada","🇬🇩"],["Guatemala","🇬🇹"],["Guinea","🇬🇳"],["Guinea-Bissau","🇬🇼"],["Guyana","🇬🇾"],["Haiti","🇭🇹"],
+  ["Honduras","🇭🇳"],["Hungary","🇭🇺"],["Iceland","🇮🇸"],["India","🇮🇳"],["Indonesia","🇮🇩"],["Iran","🇮🇷"],["Iraq","🇮🇶"],["Ireland","🇮🇪"],["Israel","🇮🇱"],["Italy","🇮🇹"],
+  ["Ivory Coast","🇨🇮"],["Jamaica","🇯🇲"],["Japan","🇯🇵"],["Jordan","🇯🇴"],["Kazakhstan","🇰🇿"],["Kenya","🇰🇪"],["Kiribati","🇰🇮"],["Kosovo","🇽🇰"],["Kuwait","🇰🇼"],["Kyrgyzstan","🇰🇬"],
+  ["Laos","🇱🇦"],["Latvia","🇱🇻"],["Lebanon","🇱🇧"],["Lesotho","🇱🇸"],["Liberia","🇱🇷"],["Libya","🇱🇾"],["Liechtenstein","🇱🇮"],["Lithuania","🇱🇹"],["Luxembourg","🇱🇺"],["Madagascar","🇲🇬"],
+  ["Malawi","🇲🇼"],["Malaysia","🇲🇾"],["Maldives","🇲🇻"],["Mali","🇲🇱"],["Malta","🇲🇹"],["Mauritania","🇲🇷"],["Mauritius","🇲🇺"],["Mexico","🇲🇽"],["Moldova","🇲🇩"],["Monaco","🇲🇨"],
+  ["Mongolia","🇲🇳"],["Montenegro","🇲🇪"],["Morocco","🇲🇦"],["Mozambique","🇲🇿"],["Myanmar","🇲🇲"],["Namibia","🇳🇦"],["Nepal","🇳🇵"],["Netherlands","🇳🇱"],["New Zealand","🇳🇿"],["Nicaragua","🇳🇮"],
+  ["Niger","🇳🇪"],["Nigeria","🇳🇬"],["North Korea","🇰🇵"],["North Macedonia","🇲🇰"],["Norway","🇳🇴"],["Oman","🇴🇲"],["Pakistan","🇵🇰"],["Palestine","🇵🇸"],["Panama","🇵🇦"],["Papua New Guinea","🇵🇬"],
+  ["Paraguay","🇵🇾"],["Peru","🇵🇪"],["Philippines","🇵🇭"],["Poland","🇵🇱"],["Portugal","🇵🇹"],["Qatar","🇶🇦"],["Romania","🇷🇴"],["Russia","🇷🇺"],["Rwanda","🇷🇼"],["Saudi Arabia","🇸🇦"],
+  ["Senegal","🇸🇳"],["Serbia","🇷🇸"],["Sierra Leone","🇸🇱"],["Singapore","🇸🇬"],["Slovakia","🇸🇰"],["Slovenia","🇸🇮"],["Somalia","🇸🇴"],["South Africa","🇿🇦"],["South Korea","🇰🇷"],["South Sudan","🇸🇸"],
+  ["Spain","🇪🇸"],["Sri Lanka","🇱🇰"],["Sudan","🇸🇩"],["Suriname","🇸🇷"],["Sweden","🇸🇪"],["Switzerland","🇨🇭"],["Syria","🇸🇾"],["Taiwan","🇹🇼"],["Tajikistan","🇹🇯"],["Tanzania","🇹🇿"],
+  ["Thailand","🇹🇭"],["Togo","🇹🇬"],["Trinidad and Tobago","🇹🇹"],["Tunisia","🇹🇳"],["Turkey","🇹🇷"],["Turkmenistan","🇹🇲"],["UAE","🇦🇪"],["Uganda","🇺🇬"],["Ukraine","🇺🇦"],["United Kingdom","🇬🇧"],
+  ["United States","🇺🇸"],["Uruguay","🇺🇾"],["Uzbekistan","🇺🇿"],["Venezuela","🇻🇪"],["Vietnam","🇻🇳"],["Yemen","🇾🇪"],["Zambia","🇿🇲"],["Zimbabwe","🇿🇼"]
+];
+const FLAGS = {};
+COUNTRIES.forEach(([name, flag]) => FLAGS[name] = flag);
+FLAGS['UK'] = '🇬🇧'; FLAGS['USA'] = '🇺🇸';
+
+function flag(c) { return FLAGS[c] || '🌍'; }
+
+// ── Country autocomplete ──
+let ddHighlight = -1;
+function filterCountryDropdown() {
+  const input = document.getElementById('scout-country');
+  const dd = document.getElementById('country-dropdown');
+  const q = input.value.toLowerCase().trim();
+  if (!q) { dd.classList.remove('open'); return; }
+  const matches = COUNTRIES.filter(([name]) => name.toLowerCase().includes(q)).slice(0, 12);
+  if (!matches.length) { dd.classList.remove('open'); return; }
+  ddHighlight = -1;
+  dd.innerHTML = matches.map(([name, fl], i) =>
+    `<div class="cd-item" data-idx="${i}" onmousedown="selectCountry('${esc(name)}')"><span class="cd-flag">${fl}</span>${esc(name)}</div>`
+  ).join('');
+  dd.classList.add('open');
+}
+function selectCountry(name) {
+  document.getElementById('scout-country').value = name;
+  document.getElementById('country-dropdown').classList.remove('open');
+}
+function handleCountryKey(e) {
+  const dd = document.getElementById('country-dropdown');
+  const items = dd.querySelectorAll('.cd-item');
+  if (!dd.classList.contains('open') || !items.length) {
+    if (e.key === 'Enter') doScout();
+    return;
+  }
+  if (e.key === 'ArrowDown') { e.preventDefault(); ddHighlight = Math.min(ddHighlight + 1, items.length - 1); highlightDD(items); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); ddHighlight = Math.max(ddHighlight - 1, 0); highlightDD(items); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (ddHighlight >= 0 && items[ddHighlight]) items[ddHighlight].onmousedown(); else doScout(); }
+  else if (e.key === 'Escape') { dd.classList.remove('open'); }
+}
+function highlightDD(items) {
+  items.forEach((el, i) => el.classList.toggle('highlighted', i === ddHighlight));
+  if (ddHighlight >= 0 && items[ddHighlight]) items[ddHighlight].scrollIntoView({ block: 'nearest' });
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.country-input-wrap')) document.getElementById('country-dropdown').classList.remove('open');
+});
+
+// ── Seed data (Argentina) ──
+const SEED = [
+  {id:uid(),company_name:'Baufest',country:'Argentina',city:'Buenos Aires',founded:'1991',employees:'500–1,000',revenue_est:'~$100M',gross_margin_est:'~35–45%',fit_score:88,fit_tier:'high',firm_size_segment:'Enterprise',existing_partners:'SAP, AWS, Microsoft Azure, Databricks, Salesforce',industries:'Finance, Healthcare, Retail, Insurance',reputation_status:'Reputable',reputation_details:'34-year track record in digital transformation across Latin America.',strategic_fit:'Ideal to introduce OrangeHRM as complementary HR for clients not fully committed to SAP SuccessFactors.',outreach_status:'new',pros:'34-year track record in Argentina\nDeep enterprise HR/ERP experience\nUS & LatAm client reach\nStrong SME & enterprise client base',cons:'May favour larger license deals\nSAP allegiance may cause conflict\nRevenue unconfirmed (private)',notes:'Strongest candidate in Argentina.',sources:[{title:'Baufest Official',url:'https://baufest.com'}],created_at:new Date().toISOString(),updated_at:new Date().toISOString()},
+  {id:uid(),company_name:'Accion Point',country:'Argentina',city:'Buenos Aires / Rosario',founded:'1979',employees:'250+',revenue_est:'~$17.3M',gross_margin_est:'~30–40%',fit_score:80,fit_tier:'high',firm_size_segment:'Mid-Market',existing_partners:'GeneXus, Bantotal, IBM RPA',industries:'Banking, FinTech, Insurance, Retail',reputation_status:'Institutional',reputation_details:'45+ years in AR market with 600+ active clients.',strategic_fit:'Distributor model directly compatible with OrangeHRM reseller program.',outreach_status:'new',pros:'45+ years in AR market\n600+ active clients\nProven distributor / reseller DNA\nISO 9001:2015 certified',cons:'Banking-heavy focus may limit HR exposure\nGeneXus exclusivity may limit bandwidth',notes:'Distributor model directly compatible with OrangeHRM.',sources:[],created_at:new Date().toISOString(),updated_at:new Date().toISOString()},
+  {id:uid(),company_name:'Nybble Group',country:'Argentina',city:'Buenos Aires / Salta',founded:'2005',employees:'170+',revenue_est:'Not public',gross_margin_est:'~35–50%',fit_score:76,fit_tier:'high',firm_size_segment:'Mid-Market',existing_partners:'Odoo, Accenture (sub), Capgemini (sub), Salesforce',industries:'FinTech, Healthcare, Media, Insurance',reputation_status:'Rising',reputation_details:'Growing Odoo partner with LatAm multi-industry reach.',strategic_fit:'Position OrangeHRM Advanced as best-of-breed HRMS where Odoo HR module is insufficient.',outreach_status:'new',pros:'ERP SI is core competency\nOdoo partner — open-source DNA aligns\nMulti-industry reach across LatAm',cons:'Odoo includes HR module — overlap risk\nRevenue undisclosed',notes:'Position OrangeHRM Advanced as best-of-breed HRMS.',sources:[],created_at:new Date().toISOString(),updated_at:new Date().toISOString()},
+  {id:uid(),company_name:'Abakos S.A.',country:'Argentina',city:'Vicente López, Buenos Aires',founded:'2005',employees:'51–200',revenue_est:'Not public',gross_margin_est:'~40–55%',fit_score:63,fit_tier:'mid',firm_size_segment:'SME',existing_partners:'SAP S/4HANA, SAP Business One, Odoo ERP',industries:'Industrial, Commercial, Services',reputation_status:'Reputable',reputation_details:'Dual SAP + Odoo portfolio with deep AR localization.',strategic_fit:'Best positioned for SME clients where SuccessFactors is cost-prohibitive.',outreach_status:'new',pros:'Dual SAP + Odoo portfolio\nSME client base aligns with OrangeHRM\nDeep AR localization expertise',cons:'Heavy SAP focus — loyalty conflict risk\nSmaller team limits scale',notes:'Consider referral partnership first.',sources:[],created_at:new Date().toISOString(),updated_at:new Date().toISOString()},
+  {id:uid(),company_name:'Buenos Aires Software',country:'Argentina',city:'Buenos Aires',founded:'1979',employees:'51–200',revenue_est:'Not public',gross_margin_est:'~30–45%',fit_score:60,fit_tier:'mid',firm_size_segment:'SME',existing_partners:'Proprietary ERP, HR modules, POS systems',industries:'SME — various sectors',reputation_status:'Institutional',reputation_details:'47 years of AR market trust and deep SME network.',strategic_fit:'Approach as integration or white-label conversation rather than standard reseller.',outreach_status:'new',pros:'Existing HR software client base\n47 years of AR market trust\nDeep SME network',cons:'Own HR module = competitive conflict\nMay resist cannibalising own products',notes:'Conditional candidate. Qualify intent early.',sources:[],created_at:new Date().toISOString(),updated_at:new Date().toISOString()},
+];
+
+// ══════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════
+window.onload = function() {
+  // Theme
+  const savedTheme = localStorage.getItem('psTheme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon();
+
+  // Auto-import from old tool
+  const oldData = localStorage.getItem('ohrmLeads');
+  const newData = localStorage.getItem('partnerScoutData');
+  if (!newData && oldData) {
+    try {
+      const imported = JSON.parse(oldData);
+      if (Array.isArray(imported) && imported.length) {
+        // Migrate old format to new
+        leads = imported.map(l => ({
+          ...l,
+          firm_size_segment: l.firm_size_segment || guessFirmSize(l.employees),
+          reputation_status: l.reputation_status || 'Reputable',
+          reputation_details: l.reputation_details || '',
+          strategic_fit: l.strategic_fit || l.notes || '',
+          sources: l.sources || [],
+          created_at: l.created_at || new Date().toISOString(),
+          updated_at: l.updated_at || new Date().toISOString(),
+        }));
+        save();
+        toast('Imported ' + leads.length + ' leads from previous tool');
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  if (!leads.length) {
+    const saved = localStorage.getItem('partnerScoutData');
+    leads = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(SEED));
+    if (!saved) save();
+  }
+
+  // API key
+  const key = localStorage.getItem('psGeminiKey');
+  if (key) document.getElementById('gemini-key-input').value = key;
+  const model = getModel();
+  document.getElementById('gemini-model-select').value = model;
+
+  // Last scout time
+  lastScoutTime = localStorage.getItem('psLastScout');
+
+  renderKeyBanner();
+  renderSidebar();
+  renderStats();
+  updateStatusBar();
+};
+
+function guessFirmSize(emp) {
+  if (!emp) return 'SME';
+  const n = parseInt(String(emp).replace(/[^0-9]/g, ''));
+  if (n > 500) return 'Enterprise';
+  if (n > 100) return 'Mid-Market';
+  return 'SME';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════════════════════════════════════
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('psTheme', next);
+  updateThemeIcon();
+}
+function updateThemeIcon() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.getElementById('theme-icon').innerHTML = isDark
+    ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+    : '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// STATUS BAR
+// ══════════════════════════════════════════════════════════════════════════
+function updateStatusBar() {
+  const key = getKey();
+  const dot = document.getElementById('sb-api-dot');
+  const text = document.getElementById('sb-api-text');
+  if (key) { dot.className = 'sb-dot ok'; text.textContent = 'API connected'; }
+  else { dot.className = 'sb-dot off'; text.textContent = 'No API key'; }
+  document.getElementById('sb-leads-text').textContent = leads.length + ' lead' + (leads.length !== 1 ? 's' : '');
+  const ls = lastScoutTime || localStorage.getItem('psLastScout');
+  document.getElementById('sb-last-scout').textContent = ls ? 'Last scout: ' + new Date(ls).toLocaleDateString() : 'No scouts yet';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// KEY BANNER
+// ══════════════════════════════════════════════════════════════════════════
+function renderKeyBanner() {
+  const key = getKey();
+  const wrap = document.getElementById('key-banner-wrap');
+  if (key) {
+    wrap.innerHTML = `<div class="key-banner key-set-banner" style="margin-bottom:16px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      <span class="key-banner-text">Gemini API key set — one-click scouting enabled. Model: <strong>${esc(getModel())}</strong></span>
+      <button class="btn btn-sm" onclick="openSettings()">Change</button>
+    </div>`;
+  } else {
+    wrap.innerHTML = `<div class="key-banner" style="margin-bottom:16px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      <span class="key-banner-text"><strong>No Gemini key set.</strong> Scout will generate a prompt for manual AI usage. Or add a free key at <a href="https://aistudio.google.com" target="_blank" style="color:var(--amber)">aistudio.google.com</a>.</span>
+      <button class="btn btn-sm" onclick="openSettings()">Add key</button>
+    </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SCOUT — Prompt Template (10 leads, rich data model)
+// ══════════════════════════════════════════════════════════════════════════
+const PROMPT_TEMPLATE = (country, focus) => `You are a partner scouting analyst for OrangeHRM, the world's most widely used open-source HR software (5M+ users, 100+ countries).
+
+Research 10 companies in ${country} that would make strong OrangeHRM reseller partners. Target: established IT firms that already source, sell, implement, and support HR software, IS systems, or ERP solutions to local businesses.
+
+${focus ? 'Special focus: ' + focus : ''}
+
+Return ONLY a valid JSON array — no markdown, no explanation, no code fences. Each object must have exactly these fields:
+[
+  {
+    "company_name": "string",
+    "country": "${country}",
+    "city": "string",
+    "founded": "year as string",
+    "employees": "e.g. 200-500",
+    "revenue_est": "e.g. ~$20M or Not public",
+    "gross_margin_est": "e.g. ~35-45% or Not available",
+    "fit_score": 82,
+    "fit_tier": "high",
+    "firm_size_segment": "SME or Mid-Market or Enterprise",
+    "existing_partners": "comma-separated vendor names",
+    "industries": "comma-separated industries",
+    "reputation_status": "Reputable or Rising or Institutional",
+    "reputation_details": "1-2 sentences about market reputation",
+    "strategic_fit": "2-3 sentences about why OrangeHRM is a good fit for this partner",
+    "outreach_status": "new",
+    "pros": "one strength per line, \\n separated",
+    "cons": "one risk per line, \\n separated",
+    "notes": "2-3 sentence partnership recommendation",
+    "sources": [{"title": "source name", "url": "https://..."}]
+  }
+]
+
+Rules:
+- fit_tier must be "high" (70-100), "mid" (40-69), or "low" (0-39)
+- fit_score 0-100 based on partner viability
+- firm_size_segment: "SME" (<100 employees), "Mid-Market" (100-500), "Enterprise" (500+)
+- reputation_status: "Reputable" (well-known), "Rising" (growing), "Institutional" (legacy/established)
+- Use "Not public" for unknown financials. Be honest — do not invent figures
+- Include real, verifiable companies with track records
+- sources should include at least one URL per company if available`;
+
+// ══════════════════════════════════════════════════════════════════════════
+// SCOUT — API Integration with Rate Limiting
+// ══════════════════════════════════════════════════════════════════════════
+const API_COOLDOWN = 2000; // 2s between requests
+const MAX_RETRIES = 3;
+
+async function throttledApiCall(prompt) {
+  return new Promise((resolve, reject) => {
+    apiCallQueue = apiCallQueue.then(async () => {
+      const now = Date.now();
+      const wait = Math.max(0, API_COOLDOWN - (now - apiLastCallTime));
+      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      apiLastCallTime = Date.now();
+
+      const key = getKey();
+      const model = getModel();
+      let lastError;
+
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+          const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }
+            })
+          });
+
+          if (resp.status === 429 || resp.status === 503) {
+            const backoff = Math.pow(2, attempt + 1) * 1000 + Math.random() * 1000;
+            await new Promise(r => setTimeout(r, backoff));
+            lastError = new Error(`API rate limited (${resp.status}), retrying...`);
+            continue;
+          }
+
+          if (!resp.ok) {
+            const e = await resp.json().catch(() => ({}));
+            throw new Error(e.error?.message || `Gemini API error ${resp.status}`);
+          }
+
+          const data = await resp.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          resolve(text);
+          return;
+        } catch (err) {
+          lastError = err;
+          if (attempt < MAX_RETRIES - 1) {
+            const backoff = Math.pow(2, attempt + 1) * 1000;
+            await new Promise(r => setTimeout(r, backoff));
+          }
+        }
+      }
+      reject(lastError);
+    });
+  });
+}
+
+async function doScout() {
+  const country = document.getElementById('scout-country').value.trim();
+  if (!country) { toast('Enter a country first'); return; }
+  const focus = document.getElementById('scout-focus').value.trim();
+  const key = getKey();
+  pendingLeads = [];
+  selectedLeadIds = new Set();
+
+  if (key) {
+    await scoutWithGemini(country, focus);
+  } else {
+    showPromptFallback(country, focus);
+  }
+}
+
+async function scoutWithGemini(country, focus) {
+  const btn = document.getElementById('scout-btn');
+  const area = document.getElementById('results-area');
+  const body = document.getElementById('results-body');
+  const title = document.getElementById('results-title');
+
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span>Scouting ${esc(country)}…`;
+  area.classList.add('visible');
+  body.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text3)"><span class="spinner"></span> Researching partners in ${esc(country)}… This may take 15-30 seconds.</div>`;
+  title.textContent = `Scouting ${country}…`;
+  document.getElementById('save-all-btn').style.display = 'none';
+  document.getElementById('save-selected-btn').style.display = 'none';
+  document.getElementById('paste-section').style.display = 'none';
+
+  try {
+    const text = await throttledApiCall(PROMPT_TEMPLATE(country, focus));
+    parseAndShowLeads(text, country);
+    lastScoutTime = new Date().toISOString();
+    localStorage.setItem('psLastScout', lastScoutTime);
+    updateStatusBar();
+  } catch (err) {
+    body.innerHTML = `<div style="color:var(--red);padding:16px;font-size:13px"><strong>Error:</strong> ${esc(err.message)}<br><br><button class="btn btn-sm" onclick="showPromptFallback('${esc(country)}','')">Use manual prompt instead</button></div>`;
+    title.textContent = 'Scout error';
+  }
+  btn.disabled = false;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Scout country`;
+}
+
+// ── Batch scouting ──
+function toggleBatchMode() {
+  const on = document.getElementById('batch-toggle').checked;
+  document.getElementById('batch-area').style.display = on ? '' : 'none';
+}
+function addBatchCountry() {
+  const c = document.getElementById('scout-country').value.trim();
+  if (!c) { toast('Enter a country first'); return; }
+  if (batchCountries.includes(c)) { toast('Already added'); return; }
+  batchCountries.push(c);
+  renderBatchTags();
+  document.getElementById('scout-country').value = '';
+}
+function removeBatchCountry(i) {
+  batchCountries.splice(i, 1);
+  renderBatchTags();
+}
+function clearBatch() {
+  batchCountries = [];
+  renderBatchTags();
+}
+function renderBatchTags() {
+  document.getElementById('batch-tags').innerHTML = batchCountries.map((c, i) =>
+    `<span class="batch-tag">${flag(c)} ${esc(c)}<button onclick="removeBatchCountry(${i})">×</button></span>`
+  ).join('');
+}
+async function doBatchScout() {
+  if (!batchCountries.length) { toast('Add countries first'); return; }
+  const key = getKey();
+  if (!key) { toast('API key required for batch scouting'); return; }
+  const focus = document.getElementById('scout-focus').value.trim();
+  const bp = document.getElementById('batch-progress');
+  const bpBar = document.getElementById('bp-bar');
+  const bpLabel = document.getElementById('bp-label');
+  const bpDetail = document.getElementById('bp-detail');
+  const batchBtn = document.getElementById('batch-scout-btn');
+
+  bp.style.display = '';
+  batchBtn.disabled = true;
+  let allLeads = [];
+
+  for (let i = 0; i < batchCountries.length; i++) {
+    const c = batchCountries[i];
+    const pct = Math.round(((i) / batchCountries.length) * 100);
+    bpBar.style.width = pct + '%';
+    bpLabel.textContent = `Scouting ${c}… (${i + 1}/${batchCountries.length})`;
+    bpDetail.textContent = `${allLeads.length} leads found so far`;
+
+    try {
+      const text = await throttledApiCall(PROMPT_TEMPLATE(c, focus));
+      const parsed = parseLeadsFromText(text, c);
+      allLeads = allLeads.concat(parsed);
+    } catch (err) {
+      bpDetail.textContent = `Error scouting ${c}: ${err.message}. Continuing…`;
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+
+  bpBar.style.width = '100%';
+  bpLabel.textContent = `Done! Found ${allLeads.length} leads across ${batchCountries.length} countries.`;
+  bpDetail.textContent = '';
+
+  pendingLeads = allLeads;
+  showPendingLeads(allLeads, 'Batch results — ' + batchCountries.join(', '));
+
+  lastScoutTime = new Date().toISOString();
+  localStorage.setItem('psLastScout', lastScoutTime);
+  updateStatusBar();
+  batchBtn.disabled = false;
+  batchCountries = [];
+  renderBatchTags();
+}
+
+// ── Manual fallback ──
+function showPromptFallback(country, focus) {
+  const area = document.getElementById('results-area');
+  const body = document.getElementById('results-body');
+  const title = document.getElementById('results-title');
+  const paste = document.getElementById('paste-section');
+
+  area.classList.add('visible');
+  title.textContent = `Manual prompt — ${country}`;
+  document.getElementById('save-all-btn').style.display = 'none';
+  document.getElementById('save-selected-btn').style.display = 'none';
+
+  const prompt = PROMPT_TEMPLATE(country, focus);
+  body.innerHTML = `
+    <p style="font-size:13px;color:var(--text2);margin-bottom:10px"><strong>Step 1:</strong> Copy this prompt and paste it into <strong>Claude, ChatGPT, or Gemini</strong>:</p>
+    <div class="prompt-box" id="prompt-box">${esc(prompt)}</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-sm btn-primary" onclick="copyPrompt()">Copy prompt</button>
+      <a href="https://claude.ai" target="_blank" class="btn btn-sm">Open Claude ↗</a>
+      <a href="https://gemini.google.com" target="_blank" class="btn btn-sm">Open Gemini ↗</a>
+      <a href="https://chatgpt.com" target="_blank" class="btn btn-sm">Open ChatGPT ↗</a>
+    </div>
+    <p style="font-size:13px;color:var(--text2)"><strong>Step 2:</strong> Paste the JSON response below and click Parse.</p>`;
+  paste.style.display = '';
+  document.getElementById('paste-input').value = '';
+}
+
+function copyPrompt() {
+  const t = document.getElementById('prompt-box').innerText;
+  navigator.clipboard.writeText(t).then(() => toast('Prompt copied!')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('Prompt copied!');
+  });
+}
+function parsePaste() {
+  const raw = document.getElementById('paste-input').value.trim();
+  parseAndShowLeads(raw, document.getElementById('scout-country').value.trim() || 'Unknown');
+  document.getElementById('paste-section').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PARSE & SHOW LEADS
+// ══════════════════════════════════════════════════════════════════════════
+function parseLeadsFromText(text, country) {
+  const match = text.match(/\[[\s\S]*\]/);
+  if (!match) return [];
+  try {
+    let arr = JSON.parse(match[0]);
+    if (!Array.isArray(arr)) return [];
+    return arr.map(l => ({
+      id: uid(),
+      company_name: l.company_name || l.name || 'Unknown',
+      country: l.country || country,
+      city: l.city || l.hqLocation || '',
+      founded: l.founded || '',
+      employees: l.employees || l.employeeSize || '',
+      revenue_est: l.revenue_est || l.financials?.revenue || 'Not public',
+      gross_margin_est: l.gross_margin_est || l.financials?.gpm || 'Not available',
+      fit_score: Math.min(100, Math.max(0, parseInt(l.fit_score) || 50)),
+      fit_tier: ['high', 'mid', 'low'].includes(l.fit_tier) ? l.fit_tier : (parseInt(l.fit_score) >= 70 ? 'high' : parseInt(l.fit_score) >= 40 ? 'mid' : 'low'),
+      firm_size_segment: l.firm_size_segment || l.firmSizeSegment || guessFirmSize(l.employees),
+      existing_partners: l.existing_partners || '',
+      industries: l.industries || '',
+      reputation_status: l.reputation_status || l.reputation?.status || 'Reputable',
+      reputation_details: l.reputation_details || l.reputation?.details || '',
+      strategic_fit: l.strategic_fit || l.strategicFit?.whyOrangeHRM || '',
+      outreach_status: 'new',
+      pros: l.pros || '',
+      cons: l.cons || '',
+      notes: l.notes || '',
+      sources: Array.isArray(l.sources) ? l.sources : [],
+      pitch_email: '',
+      outreach_notes: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
+  } catch (e) { return []; }
+}
+
+function parseAndShowLeads(text, country) {
+  const area = document.getElementById('results-area');
+  const body = document.getElementById('results-body');
+  const title = document.getElementById('results-title');
+  area.classList.add('visible');
+
+  const parsed = parseLeadsFromText(text, country);
+  if (!parsed.length) {
+    body.innerHTML = `<div style="color:var(--red);font-size:13px;padding:12px">Could not parse JSON from response. Make sure the AI returned a JSON array.<br><br><button class="btn btn-sm" onclick="showPromptFallback('${esc(country)}','')">Try manual prompt</button></div>`;
+    title.textContent = 'Parse error';
+    return;
+  }
+
+  pendingLeads = parsed;
+  showPendingLeads(parsed, `${flag(country)} ${country} — ${parsed.length} potential partners`);
+}
+
+function showPendingLeads(parsed, titleText) {
+  const body = document.getElementById('results-body');
+  const title = document.getElementById('results-title');
+  title.textContent = titleText;
+  document.getElementById('save-all-btn').style.display = '';
+  document.getElementById('save-selected-btn').style.display = '';
+
+  body.innerHTML = '<div class="leads-grid">' + parsed.map((l, i) => {
+    const sw = Math.min(100, l.fit_score || 0);
+    const fc = l.fit_tier === 'high' ? 'fill-high' : l.fit_tier === 'mid' ? 'fill-mid' : 'fill-low';
+    const partners = (l.existing_partners || '').split(',').slice(0, 3).filter(Boolean);
+    return `<div class="lead-card" id="pending-${i}" onclick="togglePendingCard(${i})">
+      <div class="lc-header">
+        <div class="lc-top">
+          <span class="lc-num">${i + 1}</span>
+          <div style="flex:1">
+            <div class="lc-name">${esc(l.company_name)}</div>
+            <div class="lc-location">${flag(l.country)} ${esc(l.country)}${l.city ? ' · ' + esc(l.city) : ''}</div>
+          </div>
+        </div>
+        <div class="lc-badges">
+          <span class="badge b-${l.fit_tier}">Fit: ${l.fit_score}</span>
+          ${l.firm_size_segment ? `<span class="badge b-${l.firm_size_segment === 'SME' ? 'sme' : l.firm_size_segment === 'Enterprise' ? 'enterprise' : 'mid'}">${esc(l.firm_size_segment)}</span>` : ''}
+          ${l.reputation_status ? `<span class="badge" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">${esc(l.reputation_status)}</span>` : ''}
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-metrics">
+          <div class="lc-metric"><div class="lc-m-label">Employees</div><div class="lc-m-val">${esc(l.employees || '—')}</div></div>
+          <div class="lc-metric"><div class="lc-m-label">Revenue</div><div class="lc-m-val">${esc(l.revenue_est || '—')}</div></div>
+        </div>
+        ${partners.length ? '<div class="lc-partners">' + partners.map(p => `<span class="lc-ptag">${esc(p.trim())}</span>`).join('') + '</div>' : ''}
+        ${l.strategic_fit ? `<div class="lc-note">${esc(l.strategic_fit).slice(0, 120)}${l.strategic_fit.length > 120 ? '…' : ''}</div>` : ''}
+      </div>
+      <div class="lc-footer">
+        <span style="font-size:11px;color:var(--text3)">${esc(l.founded ? 'Est. ' + l.founded : '')}</span>
+        <div class="score-wrap">
+          <div class="score-bar"><div class="score-fill ${fc}" style="width:${sw}%"></div></div>
+          <span style="font-size:13px;font-weight:600">${l.fit_score}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function togglePendingCard(i) {
+  const el = document.getElementById('pending-' + i);
+  if (selectedLeadIds.has(i)) { selectedLeadIds.delete(i); el.classList.remove('selected-card'); }
+  else { selectedLeadIds.add(i); el.classList.add('selected-card'); }
+}
+
+function saveAllLeads() {
+  const dupes = pendingLeads.filter(p => leads.some(l => l.company_name.toLowerCase() === p.company_name.toLowerCase() && l.country.toLowerCase() === p.country.toLowerCase()));
+  const fresh = pendingLeads.filter(p => !leads.some(l => l.company_name.toLowerCase() === p.company_name.toLowerCase() && l.country.toLowerCase() === p.country.toLowerCase()));
+  leads = leads.concat(fresh);
+  save(); renderSidebar(); renderStats(); updateStatusBar();
+  toast(`Saved ${fresh.length} leads` + (dupes.length ? ` (${dupes.length} duplicates skipped)` : ''));
+  document.getElementById('results-area').classList.remove('visible');
+  pendingLeads = []; selectedLeadIds = new Set();
+}
+
+function saveSelectedLeads() {
+  if (!selectedLeadIds.size) { toast('Select leads by clicking on cards'); return; }
+  const selected = pendingLeads.filter((_, i) => selectedLeadIds.has(i));
+  const fresh = selected.filter(p => !leads.some(l => l.company_name.toLowerCase() === p.company_name.toLowerCase() && l.country.toLowerCase() === p.country.toLowerCase()));
+  leads = leads.concat(fresh);
+  save(); renderSidebar(); renderStats(); updateStatusBar();
+  toast(`Saved ${fresh.length} lead${fresh.length !== 1 ? 's' : ''}`);
+  document.getElementById('results-area').classList.remove('visible');
+  pendingLeads = []; selectedLeadIds = new Set();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SIDEBAR COUNTS
+// ══════════════════════════════════════════════════════════════════════════
+function renderSidebar() {
+  document.getElementById('cnt-total').textContent = leads.length;
+  const cnt = s => leads.filter(c => c.outreach_status === s).length;
+  document.getElementById('cnt-new').textContent = cnt('new');
+  document.getElementById('cnt-contacted').textContent = cnt('contacted');
+  document.getElementById('cnt-progress').textContent = cnt('in_progress');
+  document.getElementById('cnt-signed').textContent = cnt('signed');
+  document.getElementById('cnt-passed').textContent = cnt('passed');
+  updateCountryFilter();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PIPELINE STATS
+// ══════════════════════════════════════════════════════════════════════════
+function renderStats() {
+  const sr = document.getElementById('stats-row');
+  if (!sr) return;
+  const countries = new Set(leads.map(l => l.country));
+  const avgFit = leads.length ? Math.round(leads.reduce((s, l) => s + (+l.fit_score || 0), 0) / leads.length) : 0;
+  const highCount = leads.filter(l => l.fit_tier === 'high').length;
+  const activeCount = leads.filter(l => ['contacted', 'in_progress'].includes(l.outreach_status)).length;
+  const signedCount = leads.filter(l => l.outreach_status === 'signed').length;
+
+  sr.innerHTML = `
+    <div class="stat stat-accent"><div class="stat-lbl">Total leads</div><div class="stat-val">${leads.length}</div><div class="stat-sub">${countries.size} ${countries.size === 1 ? 'country' : 'countries'}</div></div>
+    <div class="stat"><div class="stat-lbl">Avg fit score</div><div class="stat-val">${avgFit}</div><div class="stat-sub">across all leads</div></div>
+    <div class="stat"><div class="stat-lbl">High fit</div><div class="stat-val" style="color:var(--green)">${highCount}</div><div class="stat-sub">${leads.length ? Math.round(highCount / leads.length * 100) : 0}% of pipeline</div></div>
+    <div class="stat"><div class="stat-lbl">Active outreach</div><div class="stat-val" style="color:var(--blue)">${activeCount}</div><div class="stat-sub">contacted + in progress</div></div>
+    <div class="stat"><div class="stat-lbl">Signed</div><div class="stat-val" style="color:var(--green)">${signedCount}</div><div class="stat-sub">partner agreements</div></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PIPELINE TABLE
+// ══════════════════════════════════════════════════════════════════════════
+function renderTable() {
+  const q = (document.getElementById('search-q')?.value || '').toLowerCase();
+  const fc = document.getElementById('flt-country')?.value || '';
+  const ff = document.getElementById('flt-fit')?.value || '';
+  const fs = document.getElementById('flt-status')?.value || '';
+  const fseg = document.getElementById('flt-segment')?.value || '';
+
+  let list = leads.filter(c => {
+    if (fc && c.country !== fc) return false;
+    if (ff && c.fit_tier !== ff) return false;
+    if (fs && c.outreach_status !== fs) return false;
+    if (fseg && c.firm_size_segment !== fseg) return false;
+    if (q) {
+      const hay = [c.company_name, c.country, c.city, c.existing_partners, c.industries, c.notes, c.strategic_fit].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  list.sort((a, b) => {
+    let av = a[sortCol] || '', bv = b[sortCol] || '';
+    if (sortCol === 'fit_score') { av = +av || 0; bv = +bv || 0; }
+    if (av < bv) return -sortDir; if (av > bv) return sortDir; return 0;
+  });
+
+  // Update sort headers
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  const sortTh = document.getElementById('th-' + sortCol);
+  if (sortTh) sortTh.classList.add('sorted');
+
+  const tbody = document.getElementById('pipeline-tbody');
+  const empty = document.getElementById('pipeline-empty');
+  if (!list.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = list.map(c => {
+    const sw = Math.min(100, +c.fit_score || 0);
+    const fc2 = c.fit_tier === 'high' ? 'fill-high' : c.fit_tier === 'mid' ? 'fill-mid' : 'fill-low';
+    const partners = (c.existing_partners || '').split(',').slice(0, 2).filter(Boolean);
+    return `<tr onclick="openDetail('${c.id}')">
+      <td><div class="cell-name">${esc(c.company_name)}</div><div class="cell-sub">${flag(c.country)} ${esc(c.country)}${c.city ? ' · ' + esc(c.city) : ''}</div></td>
+      <td>${esc(c.country)}</td>
+      <td>${esc(c.employees || '—')}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${esc(c.revenue_est || '—')}</td>
+      <td><div style="display:flex;align-items:center;gap:7px"><div class="score-bar"><div class="score-fill ${fc2}" style="width:${sw}%"></div></div><span style="font-size:13px;font-weight:600">${c.fit_score || '—'}</span></div></td>
+      <td><div class="ptags">${partners.map(p => `<span class="lc-ptag">${esc(p.trim())}</span>`).join('')}</div></td>
+      <td>${statusBadge(c.outreach_status)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateCountryFilter() {
+  const sel = document.getElementById('flt-country');
+  if (!sel) return;
+  const cur = sel.value;
+  const countries = [...new Set(leads.map(c => c.country))].sort();
+  sel.innerHTML = '<option value="">All countries</option>' + countries.map(c => `<option value="${c}"${c === cur ? ' selected' : ''}>${flag(c)} ${c}</option>`).join('');
+}
+
+function statusBadge(s) {
+  const m = { new: ['b-new', 'New'], contacted: ['b-contacted', 'Contacted'], in_progress: ['b-progress', 'In progress'], signed: ['b-signed', 'Signed'], passed: ['b-passed', 'Passed'] };
+  const [cls, lbl] = m[s] || ['b-new', s || 'New'];
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = -1; }
+  renderTable();
+}
+function filterStatus(s) {
+  setView('pipeline');
+  document.getElementById('flt-status').value = s;
+  renderTable();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// COUNTRIES VIEW
+// ══════════════════════════════════════════════════════════════════════════
+function renderCountries() {
+  const grid = document.getElementById('country-grid');
+  const empty = document.getElementById('country-empty');
+  const byC = {};
+  leads.forEach(c => { if (!byC[c.country]) byC[c.country] = []; byC[c.country].push(c); });
+  const countries = Object.keys(byC).sort();
+  if (!countries.length) { grid.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = countries.map(country => {
+    const cos = byC[country];
+    const high = cos.filter(c => c.fit_tier === 'high').length;
+    const signed = cos.filter(c => c.outreach_status === 'signed').length;
+    const active = cos.filter(c => ['contacted', 'in_progress'].includes(c.outreach_status)).length;
+    return `<div class="country-card" onclick="goCountry('${esc(country)}')">
+      <div class="cc-hdr"><span class="cc-flag">${flag(country)}</span><div><div class="cc-name">${esc(country)}</div><div class="cc-count">${cos.length} lead${cos.length !== 1 ? 's' : ''}</div></div></div>
+      <div class="cc-stats">
+        <div class="cc-stat"><div class="cc-sv" style="color:var(--green)">${high}</div><div class="cc-sl">High fit</div></div>
+        <div class="cc-stat"><div class="cc-sv" style="color:var(--blue)">${active}</div><div class="cc-sl">Active</div></div>
+        <div class="cc-stat"><div class="cc-sv" style="color:var(--green)">${signed}</div><div class="cc-sl">Signed</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function goCountry(c) {
+  setView('pipeline');
+  document.getElementById('flt-country').value = c;
+  renderTable();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ANALYTICS DASHBOARD
+// ══════════════════════════════════════════════════════════════════════════
+function renderAnalytics() {
+  const statsEl = document.getElementById('analytics-stats');
+  const gridEl = document.getElementById('analytics-grid');
+  if (!leads.length) {
+    statsEl.innerHTML = '';
+    gridEl.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><h3>No data yet</h3><p>Scout some countries to see analytics.</p></div>';
+    return;
+  }
+
+  const countries = [...new Set(leads.map(l => l.country))];
+  const avgFit = Math.round(leads.reduce((s, l) => s + (+l.fit_score || 0), 0) / leads.length);
+  const byStatus = {};
+  leads.forEach(l => { byStatus[l.outreach_status] = (byStatus[l.outreach_status] || 0) + 1; });
+  const convRate = leads.length ? Math.round((byStatus['signed'] || 0) / leads.length * 100) : 0;
+
+  statsEl.innerHTML = `
+    <div class="stat stat-accent"><div class="stat-lbl">Pipeline value</div><div class="stat-val">${leads.length}</div><div class="stat-sub">${countries.length} countries</div></div>
+    <div class="stat"><div class="stat-lbl">Average fit</div><div class="stat-val">${avgFit}/100</div></div>
+    <div class="stat"><div class="stat-lbl">Conversion</div><div class="stat-val">${convRate}%</div><div class="stat-sub">signed / total</div></div>`;
+
+  // Funnel
+  const funnelOrder = ['new', 'contacted', 'in_progress', 'signed', 'passed'];
+  const funnelColors = { new: '#6840b0', contacted: 'var(--blue)', in_progress: 'var(--amber)', signed: 'var(--green)', passed: 'var(--text3)' };
+  const funnelLabels = { new: 'New', contacted: 'Contacted', in_progress: 'In Progress', signed: 'Signed', passed: 'Passed' };
+  const maxFunnel = Math.max(...funnelOrder.map(s => byStatus[s] || 0), 1);
+  const funnelHTML = funnelOrder.map(s => {
+    const count = byStatus[s] || 0;
+    const pct = Math.max(5, (count / maxFunnel) * 100);
+    return `<div class="funnel-row">
+      <div class="funnel-label">${funnelLabels[s]}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${funnelColors[s]}">${count}</div></div>
+    </div>`;
+  }).join('');
+
+  // Country breakdown
+  const byCountry = {};
+  leads.forEach(l => { byCountry[l.country] = (byCountry[l.country] || 0) + 1; });
+  const sortedCountries = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const maxCountry = Math.max(...sortedCountries.map(([, v]) => v), 1);
+  const countryHTML = sortedCountries.map(([name, count]) => {
+    const pct = (count / maxCountry) * 100;
+    return `<div class="bar-chart-row">
+      <div class="bar-label">${flag(name)} ${esc(name)}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:var(--orange)"></div></div>
+      <div class="bar-val">${count}</div>
+    </div>`;
+  }).join('');
+
+  // Fit distribution
+  const fitDist = { high: 0, mid: 0, low: 0 };
+  leads.forEach(l => { fitDist[l.fit_tier] = (fitDist[l.fit_tier] || 0) + 1; });
+  const fitColors = { high: 'var(--green)', mid: '#c8900a', low: 'var(--red)' };
+  const maxFit = Math.max(...Object.values(fitDist), 1);
+  const fitHTML = Object.entries(fitDist).map(([tier, count]) => {
+    const pct = (count / maxFit) * 100;
+    return `<div class="bar-chart-row">
+      <div class="bar-label" style="width:80px">${tier.charAt(0).toUpperCase() + tier.slice(1)} fit</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${fitColors[tier]}"></div></div>
+      <div class="bar-val">${count}</div>
+    </div>`;
+  }).join('');
+
+  // Segment breakdown
+  const bySegment = {};
+  leads.forEach(l => { const seg = l.firm_size_segment || 'Unknown'; bySegment[seg] = (bySegment[seg] || 0) + 1; });
+  const segColors = { SME: 'var(--blue)', 'Mid-Market': 'var(--amber)', Enterprise: 'var(--purple)', Unknown: 'var(--text3)' };
+  const maxSeg = Math.max(...Object.values(bySegment), 1);
+  const segHTML = Object.entries(bySegment).sort((a, b) => b[1] - a[1]).map(([seg, count]) => {
+    const pct = (count / maxSeg) * 100;
+    return `<div class="bar-chart-row">
+      <div class="bar-label" style="width:100px">${esc(seg)}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${segColors[seg] || 'var(--text3)'}"></div></div>
+      <div class="bar-val">${count}</div>
+    </div>`;
+  }).join('');
+
+  gridEl.innerHTML = `
+    <div class="chart-card"><div class="chart-title">Outreach Funnel</div>${funnelHTML}</div>
+    <div class="chart-card"><div class="chart-title">Leads by Country</div>${countryHTML}</div>
+    <div class="chart-card"><div class="chart-title">Fit Score Distribution</div>${fitHTML}</div>
+    <div class="chart-card"><div class="chart-title">Firm Size Segments</div>${segHTML}</div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// DETAIL PANEL
+// ══════════════════════════════════════════════════════════════════════════
+function openDetail(id) {
+  const c = leads.find(x => x.id === id); if (!c) return;
+  const sw = Math.min(100, +c.fit_score || 0);
+  const fc = c.fit_tier === 'high' ? 'fill-high' : c.fit_tier === 'mid' ? 'fill-mid' : 'fill-low';
+  document.getElementById('dp-name').textContent = c.company_name;
+  document.getElementById('dp-meta').innerHTML = `
+    <span>${flag(c.country)} ${esc(c.country)}${c.city ? ' · ' + esc(c.city) : ''}</span>
+    ${c.founded ? '<span>Est. ' + esc(c.founded) + '</span>' : ''}
+    <span class="badge b-${c.fit_tier}" style="margin-left:4px">Fit: ${c.fit_score}</span>
+    ${c.firm_size_segment ? `<span class="badge b-${c.firm_size_segment === 'SME' ? 'sme' : c.firm_size_segment === 'Enterprise' ? 'enterprise' : 'mid'}">${esc(c.firm_size_segment)}</span>` : ''}`;
+
+  const pros = (c.pros || '').split('\n').filter(Boolean);
+  const cons = (c.cons || '').split('\n').filter(Boolean);
+  const partners = (c.existing_partners || '').split(',').filter(Boolean);
+  const inds = (c.industries || '').split(',').filter(Boolean);
+  const sources = c.sources || [];
+
+  document.getElementById('dp-body').innerHTML = `
+    <div class="dp-section">
+      <div class="dp-section-title">Key metrics</div>
+      <div class="dp-metrics">
+        <div class="dp-metric"><div class="dm-lbl">Employees</div><div class="dm-val">${esc(c.employees || '—')}</div></div>
+        <div class="dp-metric"><div class="dm-lbl">Revenue (est.)</div><div class="dm-val">${esc(c.revenue_est || '—')}</div><div class="dm-note">Third-party estimate</div></div>
+        <div class="dp-metric"><div class="dm-lbl">Gross margin (est.)</div><div class="dm-val">${esc(c.gross_margin_est || '—')}</div></div>
+        <div class="dp-metric"><div class="dm-lbl">Fit score</div><div class="dm-val" style="display:flex;align-items:center;gap:7px">${c.fit_score}<div class="score-bar" style="width:48px"><div class="score-fill ${fc}" style="width:${sw}%"></div></div></div></div>
+      </div>
+    </div>
+    ${c.reputation_status || c.reputation_details ? `<div class="dp-section">
+      <div class="dp-section-title">Reputation</div>
+      <div class="dp-metric" style="margin-bottom:0">
+        <div class="dm-lbl">${esc(c.reputation_status || 'Unknown')}</div>
+        <div style="font-size:12px;color:var(--text);line-height:1.6;margin-top:4px">${esc(c.reputation_details)}</div>
+      </div>
+    </div>` : ''}
+    ${partners.length ? `<div class="dp-section"><div class="dp-section-title">Vendor partnerships</div><div class="dp-tags">${partners.map(p => `<span class="dp-tag">${esc(p.trim())}</span>`).join('')}</div></div>` : ''}
+    ${inds.length ? `<div class="dp-section"><div class="dp-section-title">Industries</div><div class="dp-tags">${inds.map(i => `<span class="dp-tag">${esc(i.trim())}</span>`).join('')}</div></div>` : ''}
+    ${(pros.length || cons.length) ? `<div class="dp-section"><div class="dp-section-title">Assessment</div><div class="pc-grid"><div class="pc-pros"><div class="pc-title">Strengths</div><ul>${pros.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div><div class="pc-cons"><div class="pc-title">Considerations</div><ul>${cons.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div></div></div>` : ''}
+    ${c.strategic_fit ? `<div class="dp-section"><div class="dp-section-title">Strategic fit</div><div class="rec-block"><p>${esc(c.strategic_fit)}</p></div></div>` : ''}
+    ${c.notes ? `<div class="dp-section"><div class="dp-section-title">Recommendation</div><div class="rec-block"><p>${esc(c.notes)}</p></div></div>` : ''}
+    ${sources.length ? `<div class="dp-section"><div class="dp-section-title">Sources</div>${sources.map(s => `<div style="margin-bottom:4px"><a href="${esc(s.url)}" target="_blank" style="font-size:12px;color:var(--orange);text-decoration:none">${esc(s.title || s.url)} ↗</a></div>`).join('')}</div>` : ''}
+    <div class="dp-section">
+      <div class="dp-section-title">Outreach status</div>
+      <select class="status-sel" onchange="updateStatus('${c.id}',this.value)">
+        <option value="new"${c.outreach_status === 'new' ? ' selected' : ''}>New / uncontacted</option>
+        <option value="contacted"${c.outreach_status === 'contacted' ? ' selected' : ''}>Contacted</option>
+        <option value="in_progress"${c.outreach_status === 'in_progress' ? ' selected' : ''}>In progress</option>
+        <option value="signed"${c.outreach_status === 'signed' ? ' selected' : ''}>Signed</option>
+        <option value="passed"${c.outreach_status === 'passed' ? ' selected' : ''}>Passed</option>
+      </select>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-title">Pitch email</div>
+      <div id="pitch-area-${c.id}">
+        ${c.pitch_email ? `<div class="pitch-block"><div class="pitch-email">${esc(c.pitch_email)}</div></div><div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-sm" onclick="copyPitch('${c.id}')">Copy pitch</button><button class="btn btn-sm" onclick="generatePitch('${c.id}')">Regenerate</button></div>` : `<button class="btn btn-sm btn-primary" onclick="generatePitch('${c.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Generate AI pitch</button>`}
+      </div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-title">Outreach notes</div>
+      <textarea class="notes-ta" id="outreach-notes-${c.id}" onchange="updateOutreachNotes('${c.id}',this.value)" placeholder="Add notes about outreach progress...">${esc(c.outreach_notes || '')}</textarea>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-title">Internal notes</div>
+      <textarea class="notes-ta" id="notes-ta-${c.id}" onchange="updateNotes('${c.id}',this.value)">${esc(c.notes || '')}</textarea>
+    </div>
+    <div class="dp-actions">
+      <button class="btn btn-sm btn-danger" onclick="deleteLead('${c.id}')">Remove lead</button>
+    </div>`;
+
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+function updateStatus(id, val) {
+  const c = leads.find(x => x.id === id);
+  if (c) { c.outreach_status = val; c.updated_at = new Date().toISOString(); save(); renderSidebar(); renderStats(); renderTable(); toast('Status updated'); }
+}
+function updateNotes(id, val) {
+  const c = leads.find(x => x.id === id);
+  if (c) { c.notes = val; c.updated_at = new Date().toISOString(); save(); }
+}
+function updateOutreachNotes(id, val) {
+  const c = leads.find(x => x.id === id);
+  if (c) { c.outreach_notes = val; c.updated_at = new Date().toISOString(); save(); }
+}
+function deleteLead(id) {
+  if (!confirm('Remove this lead?')) return;
+  leads = leads.filter(x => x.id !== id);
+  save(); closeDetail(); renderSidebar(); renderStats(); renderTable(); updateStatusBar();
+  toast('Lead removed');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PITCH EMAIL GENERATION
+// ══════════════════════════════════════════════════════════════════════════
+async function generatePitch(id) {
+  const c = leads.find(x => x.id === id); if (!c) return;
+  const key = getKey();
+  if (!key) { toast('API key required for pitch generation'); return; }
+
+  const area = document.getElementById('pitch-area-' + id);
+  area.innerHTML = '<div style="padding:10px;color:var(--text3)"><span class="spinner"></span>Generating pitch email…</div>';
+
+  const prompt = `Write a professional outreach email from an OrangeHRM Partnerships Manager to ${c.company_name} (${c.country}).
+
+Company context:
+- ${c.company_name} is a ${c.firm_size_segment || 'mid-market'} firm with ${c.employees || 'unknown'} employees
+- They partner with: ${c.existing_partners || 'various vendors'}
+- Industries: ${c.industries || 'technology'}
+- Strategic fit: ${c.strategic_fit || c.notes || 'Strong partner potential'}
+
+Write a 3-paragraph email that:
+1. Opens with a specific compliment about their work
+2. Explains the OrangeHRM partner opportunity (5M+ users, 100+ countries, open-source HRMS)
+3. Proposes a specific next step
+
+Tone: professional but warm, not salesy. Keep it under 200 words. Return ONLY the email text, no subject line.`;
+
+  try {
+    const text = await throttledApiCall(prompt);
+    c.pitch_email = text.trim();
+    c.updated_at = new Date().toISOString();
+    save();
+    area.innerHTML = `<div class="pitch-block"><div class="pitch-email">${esc(c.pitch_email)}</div></div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="copyPitch('${c.id}')">Copy pitch</button>
+        <button class="btn btn-sm" onclick="generatePitch('${c.id}')">Regenerate</button>
+      </div>`;
+    toast('Pitch generated!');
+  } catch (err) {
+    area.innerHTML = `<div style="color:var(--red);font-size:12px">Error: ${esc(err.message)}</div>
+      <button class="btn btn-sm" onclick="generatePitch('${c.id}')" style="margin-top:6px">Retry</button>`;
+  }
+}
+
+function copyPitch(id) {
+  const c = leads.find(x => x.id === id); if (!c) return;
+  navigator.clipboard.writeText(c.pitch_email).then(() => toast('Pitch copied!')).catch(() => toast('Copy failed'));
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// VIEWS
+// ══════════════════════════════════════════════════════════════════════════
+function setView(v) {
+  activeView = v;
+  ['scout', 'countries', 'pipeline', 'analytics'].forEach(id => {
+    document.getElementById('view-' + id).style.display = id === v ? '' : 'none';
+    const n = document.getElementById('nav-' + id);
+    if (n) n.classList.toggle('active', id === v);
+  });
+  if (v === 'pipeline') { renderTable(); renderStats(); }
+  if (v === 'countries') { renderCountries(); }
+  if (v === 'scout') { renderKeyBanner(); }
+  if (v === 'analytics') { renderAnalytics(); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CSV IMPORT/EXPORT
+// ══════════════════════════════════════════════════════════════════════════
+const COLS = ['company_name', 'country', 'city', 'founded', 'employees', 'revenue_est', 'gross_margin_est', 'fit_score', 'fit_tier', 'firm_size_segment', 'existing_partners', 'industries', 'reputation_status', 'reputation_details', 'strategic_fit', 'outreach_status', 'pros', 'cons', 'notes', 'outreach_notes'];
+
+function importCSV(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const lines = ev.target.result.split('\n').filter(l => l.trim());
+    const headers = parseLine(lines[0]).map(h => h.trim().toLowerCase());
+    let added = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const vals = parseLine(lines[i]); if (!vals.length) continue;
+      const row = {}; headers.forEach((h, j) => row[h] = (vals[j] || '').trim());
+      if (!row.company_name) continue;
+      const exists = leads.find(c => c.company_name.toLowerCase() === row.company_name.toLowerCase() && c.country.toLowerCase() === (row.country || '').toLowerCase());
+      if (exists) Object.assign(exists, row);
+      else {
+        leads.push({
+          id: uid(), outreach_status: 'new', fit_tier: 'mid', fit_score: 50,
+          firm_size_segment: 'SME', reputation_status: 'Reputable',
+          sources: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+          ...row
+        });
+        added++;
+      }
+    }
+    save(); renderSidebar(); renderStats(); updateStatusBar();
+    toast(`Imported — ${added} new leads`);
+  };
+  reader.readAsText(file); e.target.value = '';
+}
+
+function parseLine(line) {
+  const res = [], re = /(?:^|,)("(?:[^"]|"")*"|[^,]*)/g; let m;
+  while ((m = re.exec(line))) { let v = m[1]; if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1).replace(/""/g, '"'); res.push(v); }
+  return res;
+}
+
+function exportCSV() {
+  if (!leads.length) { toast('No leads to export'); return; }
+  const rows = [COLS.join(',')];
+  leads.forEach(c => {
+    rows.push(COLS.map(col => {
+      const v = (c[col] || '').toString().replace(/\n/g, ' | ');
+      return (v.includes(',') || v.includes('"')) ? '"' + v.replace(/"/g, '""') + '"' : v;
+    }).join(','));
+  });
+  dl('orangehrm-partners.csv', rows.join('\n'), 'text/csv');
+  toast('CSV exported');
+}
+
+function downloadTemplate() {
+  const rows = [COLS.join(','), 'Example Corp,Germany,Berlin,2010,200-500,~$30M,~35-45%,75,high,Mid-Market,"SAP, Microsoft Dynamics","Manufacturing, Retail",Reputable,Well-known ERP partner,Strong candidate for DACH region,new,"Strong ERP track record\nEstablished client base","Revenue not public","Strong candidate for DACH region.",'];
+  dl('orangehrm-partner-template.csv', rows.join('\n'), 'text/csv');
+  toast('Template downloaded');
+}
+
+function dl(name, content, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = name; a.click();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// PDF EXPORT
+// ══════════════════════════════════════════════════════════════════════════
+function exportPDF() {
+  if (!leads.length) { toast('No leads to export'); return; }
+
+  const css = `
+    body{font-family:Arial,sans-serif;font-size:11px;color:#222;padding:20px;line-height:1.5}
+    h1{font-size:18px;color:#e8650a;border-bottom:2px solid #e8650a;padding-bottom:6px;margin-bottom:14px}
+    h2{font-size:14px;margin:16px 0 8px;color:#333}
+    .lead{page-break-inside:avoid;border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:14px}
+    .lead-name{font-size:14px;font-weight:bold;margin-bottom:4px}
+    .lead-meta{font-size:10px;color:#666;margin-bottom:8px}
+    .metrics{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+    .metric{background:#f5f5f0;border-radius:4px;padding:6px 8px}
+    .m-label{font-size:9px;color:#888;text-transform:uppercase}
+    .m-val{font-size:12px;font-weight:bold}
+    .pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+    .pros{background:#eaf6ec;border-radius:4px;padding:8px}
+    .cons{background:#fef7e6;border-radius:4px;padding:8px}
+    .section-title{font-size:9px;color:#888;text-transform:uppercase;font-weight:bold;margin-bottom:4px}
+    .rec{background:#f5f5f0;border-left:3px solid #e8650a;padding:8px;border-radius:0 4px 4px 0;margin-bottom:8px}
+    ul{margin:0;padding-left:16px}li{margin:2px 0}
+    .footer{text-align:center;font-size:9px;color:#999;margin-top:20px;border-top:1px solid #ddd;padding-top:8px}
+    @media print{body{padding:0}.lead{break-inside:avoid}}
+  `;
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>OrangeHRM Partner Scout — Dossier</title><style>${css}</style></head><body>
+    <h1>OrangeHRM Partner Scout Dossier</h1>
+    <p>Generated: ${new Date().toLocaleDateString()} · ${leads.length} leads · ${[...new Set(leads.map(l => l.country))].length} countries</p>
+    ${leads.map(c => {
+      const pros = (c.pros || '').split('\n').filter(Boolean);
+      const cons = (c.cons || '').split('\n').filter(Boolean);
+      return `<div class="lead">
+        <div class="lead-name">${esc(c.company_name)}</div>
+        <div class="lead-meta">${flag(c.country)} ${esc(c.country)}${c.city ? ' · ' + esc(c.city) : ''} · Est. ${esc(c.founded || 'N/A')} · ${esc(c.firm_size_segment || '')} · ${statusBadgeText(c.outreach_status)}</div>
+        <div class="metrics">
+          <div class="metric"><div class="m-label">Employees</div><div class="m-val">${esc(c.employees || '—')}</div></div>
+          <div class="metric"><div class="m-label">Revenue</div><div class="m-val">${esc(c.revenue_est || '—')}</div></div>
+          <div class="metric"><div class="m-label">GPM</div><div class="m-val">${esc(c.gross_margin_est || '—')}</div></div>
+          <div class="metric"><div class="m-label">Fit Score</div><div class="m-val">${c.fit_score}/100 (${c.fit_tier})</div></div>
+        </div>
+        ${c.existing_partners ? '<div style="margin-bottom:6px"><span class="section-title">Partners:</span> ' + esc(c.existing_partners) + '</div>' : ''}
+        ${c.industries ? '<div style="margin-bottom:6px"><span class="section-title">Industries:</span> ' + esc(c.industries) + '</div>' : ''}
+        ${(pros.length || cons.length) ? `<div class="pros-cons">
+          <div class="pros"><div class="section-title">Strengths</div><ul>${pros.map(p => '<li>' + esc(p) + '</li>').join('')}</ul></div>
+          <div class="cons"><div class="section-title">Considerations</div><ul>${cons.map(p => '<li>' + esc(p) + '</li>').join('')}</ul></div>
+        </div>` : ''}
+        ${c.strategic_fit ? `<div class="rec">${esc(c.strategic_fit)}</div>` : ''}
+        ${c.notes ? `<div style="font-size:10px;color:#555">${esc(c.notes)}</div>` : ''}
+      </div>`;
+    }).join('')}
+    <div class="footer">OrangeHRM Partner Scout · Confidential</div>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+  toast('PDF export ready — use Print dialog to save');
+}
+
+function statusBadgeText(s) {
+  const m = { new: 'New', contacted: 'Contacted', in_progress: 'In Progress', signed: 'Signed', passed: 'Passed' };
+  return m[s] || s || 'New';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// DOCX EXPORT (via JSZip)
+// ══════════════════════════════════════════════════════════════════════════
+async function exportDOCX() {
+  if (!leads.length) { toast('No leads to export'); return; }
+  if (typeof JSZip === 'undefined') { toast('JSZip not loaded. Check your internet connection.'); return; }
+
+  toast('Generating DOCX…');
+
+  const escXml = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  function p(text, opts = {}) {
+    const bold = opts.bold ? '<w:b/>' : '';
+    const color = opts.color ? `<w:color w:val="${opts.color}"/>` : '';
+    const size = opts.size ? `<w:sz w:val="${opts.size}"/><w:szCs w:val="${opts.size}"/>` : '';
+    return `<w:p><w:pPr>${opts.heading ? `<w:pStyle w:val="Heading${opts.heading}"/>` : ''}</w:pPr><w:r><w:rPr>${bold}${color}${size}</w:rPr><w:t xml:space="preserve">${escXml(text)}</w:t></w:r></w:p>`;
+  }
+
+  let body = '';
+  body += p('OrangeHRM Partner Scout Dossier', { heading: 1 });
+  body += p(`Generated: ${new Date().toLocaleDateString()} · ${leads.length} leads · ${[...new Set(leads.map(l => l.country))].length} countries`, { color: '666666', size: 20 });
+  body += '<w:p/>';
+
+  leads.forEach(c => {
+    body += p(c.company_name, { heading: 2 });
+    body += p(`${c.country}${c.city ? ' · ' + c.city : ''} · Est. ${c.founded || 'N/A'} · ${c.firm_size_segment || ''} · Fit: ${c.fit_score}/100 (${c.fit_tier})`, { color: '666666', size: 20 });
+    body += p(`Employees: ${c.employees || '—'} | Revenue: ${c.revenue_est || '—'} | GPM: ${c.gross_margin_est || '—'}`, { size: 20 });
+    if (c.existing_partners) body += p('Partners: ' + c.existing_partners, { size: 20 });
+    if (c.industries) body += p('Industries: ' + c.industries, { size: 20 });
+    if (c.pros) body += p('Strengths: ' + c.pros.replace(/\n/g, ' | '), { size: 20, color: '1a8a3a' });
+    if (c.cons) body += p('Considerations: ' + c.cons.replace(/\n/g, ' | '), { size: 20, color: '8a6200' });
+    if (c.strategic_fit) body += p('Strategic Fit: ' + c.strategic_fit, { size: 20, bold: true });
+    if (c.notes) body += p('Notes: ' + c.notes, { size: 20, color: '555555' });
+    body += '<w:p/>';
+  });
+
+  const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>${body}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body>
+</w:document>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`;
+
+  const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+  const wordRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>`;
+
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', contentTypes);
+  zip.file('_rels/.rels', rels);
+  zip.file('word/document.xml', docXml);
+  zip.file('word/_rels/document.xml.rels', wordRels);
+
+  const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'orangehrm-partners.docx';
+  a.click();
+  toast('DOCX exported');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════════════════════════
+function openSettings() { document.getElementById('settings-modal').classList.add('open'); }
+function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+function saveKey() {
+  const v = document.getElementById('gemini-key-input').value.trim();
+  if (v) localStorage.setItem('psGeminiKey', v);
+  else localStorage.removeItem('psGeminiKey');
+  const model = document.getElementById('gemini-model-select').value;
+  localStorage.setItem('psGeminiModel', model);
+  renderKeyBanner(); closeSettings(); updateStatusBar();
+  toast('Settings saved');
+}
+function liveKeyUpdate() {
+  const v = document.getElementById('gemini-key-input').value.trim();
+  document.getElementById('key-status-msg').textContent = v ? 'Key will be saved locally in your browser.' : 'No key — manual prompt mode will be used.';
+}
+function clearAll() {
+  if (!confirm('Clear all lead data? This cannot be undone.')) return;
+  leads = []; save(); closeDetail(); renderSidebar(); renderStats(); renderTable(); updateStatusBar();
+  toast('All data cleared');
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════════════════════════════════
+document.getElementById('settings-modal').addEventListener('click', function(e) { if (e.target === this) closeSettings(); });
+document.addEventListener('keydown', function(e) {
+  // Escape: close panels/modals
+  if (e.key === 'Escape') { closeSettings(); closeDetail(); }
+  // Ctrl+K: focus scout input
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    setView('scout');
+    document.getElementById('scout-country').focus();
+  }
+  // Ctrl+E: export CSV
+  if ((e.ctrlKey || e.metaKey) && e.key === 'e' && !e.shiftKey) {
+    e.preventDefault(); exportCSV();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════════════════
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
